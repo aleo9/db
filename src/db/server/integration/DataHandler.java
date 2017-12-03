@@ -123,7 +123,6 @@ public class DataHandler {
                 while (rs.next()) {
                     if(rs.getString("owner").equals(username) || rs.getBoolean("public")==true){
                         allowed = true;   
-                        System.out.println("x2");
                         } 
                 }
         }catch (SQLException ex) {

@@ -68,6 +68,8 @@ public class Controller {
         if(loggedIn){
             System.out.println("logged in" +loggedIn);
             this.username = username;
+        }else{
+            System.out.println("couldn't register");
         }
       
     }
@@ -78,6 +80,8 @@ public class Controller {
         boolean success = server.unregister(myRemoteObj, username, password);
         if(success){
             System.out.println("removed user " +username);
+        }else{
+            System.out.println("couldn't remove user. Wrong username or password");
         }
       
     }
@@ -131,6 +135,8 @@ public class Controller {
             } catch (IOException ex) {
                 Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }else{
+            System.out.println("not logged in");
         }
     }
 
