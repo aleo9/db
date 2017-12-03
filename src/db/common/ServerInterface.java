@@ -10,8 +10,12 @@ public interface ServerInterface extends Remote {
     
     boolean login(ClientInterface remoteNode, String username, String password) throws RemoteException;
     
-    FileInfo[] getFiles(String user) throws RemoteException;
+    boolean logout(ClientInterface remoteNode, String username, String password) throws RemoteException;
     
+    FileInfo[] getFiles(ClientInterface remoteNode, String user) throws RemoteException;
+    
+    public void edit(String filename, boolean publ, boolean writable, String username) throws RemoteException;
+            
     int upload(ClientInterface remoteNode, String username, String filename, FileInfo fileInfo) throws RemoteException;
     
     int download(ClientInterface remoteNode, String username, String filename) throws RemoteException;

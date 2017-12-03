@@ -29,24 +29,44 @@ public class Controller {
         fileClient = new FileClient();
     }
     
+        public FileInfo[] lookupFiles() throws NotBoundException, MalformedURLException, RemoteException{
+        
+        lookupServer(host);
+        //String s = server.getFiles(myRemoteObj, username);
+        FileInfo[] files = server.getFiles(myRemoteObj, username);
+        return files;
+      
+    }
+    
     public void login(String username, String password) throws NotBoundException, MalformedURLException, RemoteException{
         
         lookupServer(host);
         loggedIn = server.login(myRemoteObj, username, password);
-        System.out.println("logged in" +loggedIn);
+        
         if(loggedIn){
+            System.out.println("logged in " +loggedIn);
             this.username = username;
         }
-            
-
+      
     }
+    
+        public void logout(String username, String password) throws NotBoundException, MalformedURLException, RemoteException{
+        
+        lookupServer(host);
+        loggedIn = server.logout(myRemoteObj, username, password);
+        System.out.println("logged in " +loggedIn);
+     
+    }
+        
+        
     
     public void register(String username, String password) throws NotBoundException, MalformedURLException, RemoteException{
             
         lookupServer(host);
         loggedIn = server.register(myRemoteObj, username, password);
-        System.out.println("logged in" +loggedIn);
+        
         if(loggedIn){
+            System.out.println("logged in" +loggedIn);
             this.username = username;
         }
       
@@ -59,22 +79,33 @@ public class Controller {
         if(success){
             System.out.println("removed user " +username);
         }
-        
-        
       
     }
     
-    public void hello(){
-        System.out.println("hi");
-    }
-                
-    public void upload(String filename, int size, String owner, boolean publ, boolean writable, String log) throws RemoteException{
+    
+    
+    public void edit(String filename, boolean publ, boolean writable) throws RemoteException{
         
         if(loggedIn){
-            FileInfo fileInfo = new FileInfo(filename, size, owner, publ, writable, log);
+            server.edit(filename, publ, writable, username);
+            
+        
+            System.out.println("changed " +filename);
+        }else{
+            System.out.println("not logged in");
+        }
+        
+        
+    }
+
+    
+    public void upload(String filename, boolean publ, boolean writable) throws RemoteException{
+        
+        if(loggedIn){
+            FileInfo fileInfo = new FileInfo(filename, 225, username, publ, writable, "");
+            //int serverPort = server.upload(myRemoteObj, username, filename, fileInfo);
             int serverPort = server.upload(myRemoteObj, username, filename, fileInfo);
             fileClient.bind(serverPort);
-            System.out.println("upload 2");
         
             try {
             fileClient.sendFile(filename);
@@ -91,12 +122,15 @@ public class Controller {
         
     }
     
-    public void download(String username, String filename) throws RemoteException{
-        server.download(myRemoteObj, username, filename);
-        try {
-            fileClient.saveFile(filename);
-        } catch (IOException ex) {
-            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+    public void download(String filename) throws RemoteException{
+        if(loggedIn){
+            int serverPort = server.download(myRemoteObj, username, filename);
+            fileClient.bind(serverPort);
+            try {
+                fileClient.saveFile(filename);
+            } catch (IOException ex) {
+                Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 

@@ -1,6 +1,8 @@
 package db.common;
 
-public class FileInfo {
+import java.io.Serializable;
+
+public class FileInfo implements Serializable{
     
     public String filename;
     public int size;
@@ -29,11 +31,11 @@ public class FileInfo {
         this.publ = newPublic;
     }
         
-    public void changeSize(boolean newWritable){
+    public void changeWritable(boolean newWritable){
         this.writable = newWritable;
     }
     
-    public void changeSize(String addedChanges){
+    public void log(String addedChanges){
         String newChanges = this.log;
         newChanges+=" ";
         newChanges+= addedChanges;

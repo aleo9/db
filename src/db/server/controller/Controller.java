@@ -22,16 +22,44 @@ public class Controller extends UnicastRemoteObject implements ServerInterface {
     DataHandler dataHandler;
     
     public Controller() throws RemoteException {
-        System.out.println("controller created");
         fileServer = new FileServer(serverPort);
-        System.out.println("fileserver created");
         dataHandler = new DataHandler();
-        System.out.println("datahandler created");
 
     }
     
     public void report(FileInfo fileInfo, String username){
         //report to logged in user
+    }
+    
+    public void report(ClientInterface client, String filename, String log){
+        //report to logged in user
+        String message = "changes made to " +filename;
+        message+=log;
+        System.out.println(log);
+        try {
+            client.receiveMessage(message);
+        } catch (RemoteException ex) {
+            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    @Override
+    public void edit(String filename, boolean publ, boolean writable, String username) throws RemoteException{
+        
+        //CompletableFuture.runAsync(() -> {
+            
+                //successful
+                FileInfo fileInfo = dataHandler.updateFileInfo(filename, publ, writable, username);
+                if(fileInfo!=null){
+                    ClientInterface client = userManager.getClient(fileInfo.owner);
+                    report(client, fileInfo.filename, fileInfo.log);
+                }    
+                
+                //dataHandler.addController(this);
+            
+        //}); //end CompletableFuture
+        
+        
     }
     
     @Override
@@ -48,14 +76,16 @@ public class Controller extends UnicastRemoteObject implements ServerInterface {
             }
         }); //end CompletableFuture
         
-        
-        
         return serverPort;
     }
     
         @Override
     public int download(ClientInterface remoteNode, String username, String filename) throws RemoteException{
         System.out.println("user tries to download file");
+        
+        boolean allowedToDownload = dataHandler.allowedToDownload(username, filename);
+        
+        if(allowedToDownload){
         CompletableFuture.runAsync(() -> {
             try {
                 fileServer.establishConnection();
@@ -65,7 +95,7 @@ public class Controller extends UnicastRemoteObject implements ServerInterface {
             }
         }); //end CompletableFuture
         
-        
+        }
         
         return serverPort;
     }
@@ -96,19 +126,21 @@ public class Controller extends UnicastRemoteObject implements ServerInterface {
         
         //2. logout
         if(success){
-            userManager.logoutUser(username);
+            userManager.logoutUser(remoteNode, username);
         }
         
         return success;
     }
     
     @Override
-    public FileInfo[] getFiles(String user) {
-        System.out.println("user tries to obtain file info");
-        FileInfo[] files = userManager.getFiles(user);
-        //userManager.sendConvToParticipant(participantId);
+    public FileInfo[] getFiles(ClientInterface remoteNode, String user) {
+        
+        FileInfo[] files = dataHandler.getFileInfo(user);
+        String s = files[0].filename;
+        //FileInfo[] files = userManager.getFiles(user);
         return files;
     }
+    
     
     @Override
     public boolean login(ClientInterface remoteNode, String username, String password) {
@@ -126,7 +158,16 @@ public class Controller extends UnicastRemoteObject implements ServerInterface {
         return success;
     }
 
-
+    @Override
+    public boolean logout(ClientInterface remoteNode, String username, String password) {
+        System.out.println("user tries to logout");
+        
+        
+        boolean loggedIn = userManager.logoutUser(remoteNode, username);
+        
+        
+        return loggedIn;
+    }
 
 
 

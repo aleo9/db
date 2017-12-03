@@ -114,9 +114,59 @@ public class DataHandler {
         } 
     }
     
+    public boolean allowedToDownload(String username, String filename){
+        boolean allowed = false;
+        try{
+            statement = connection.prepareStatement("SELECT * FROM file WHERE name = ?");
+            statement.setString(1, filename);
+            ResultSet rs = statement.executeQuery();
+                while (rs.next()) {
+                    if(rs.getString("owner").equals(username) || rs.getBoolean("public")==true){
+                        allowed = true;   
+                        System.out.println("x2");
+                        } 
+                }
+        }catch (SQLException ex) {
+            Logger.getLogger(DataHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return allowed;
+    }
+            
+    public FileInfo updateFileInfo(String filename, boolean publ, boolean writable, String username){
+        FileInfo fileInfo = null;
+        try {
+            statement = connection.prepareStatement("SELECT * FROM file WHERE name = ?");
+            statement.setString(1, filename);
+            
+            ResultSet rs = statement.executeQuery();
+            while (rs.next()) {
+
+				if(rs.getString("owner").equals(username) || (rs.getBoolean("public")==true && rs.getBoolean("writable")==true)){
+                                    
+                                    String log = rs.getString("log");
+                                    log +=" " +username +" edited";
+                                    statement = connection.prepareStatement("UPDATE file SET public = ?, writable = ?, log = ? WHERE name = ?");
+
+                                    statement.setBoolean(1, publ);
+                                    statement.setBoolean(2, writable);
+                                    statement.setString(3, log);
+                                    statement.setString(4, filename);
+                                    statement.executeUpdate();
+                                    fileInfo = new FileInfo(rs.getString("name"), rs.getInt("size"), rs.getString("owner"), rs.getBoolean("public"), rs.getBoolean("writable"), log);
+                                }
+                                    
+			}
+            
+            }catch (SQLException ex) {
+            Logger.getLogger(DataHandler.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        return fileInfo;
+ 
+    }     
+    
     public void updateFileInfo(FileInfo fileInfo, String user){
 
-    
         try {
             statement = connection.prepareStatement("UPDATE file SET size = ?, public = ?, writable = ?, log = ? WHERE name = ?");
 
@@ -134,6 +184,44 @@ public class DataHandler {
         }
  
     } 
+    
+    
+    public FileInfo[] getFileInfo(String user){
+        //FileInfo[] files;
+        FileInfo[] files = null;
+        
+            try {
+            statement = connection.prepareStatement("SELECT * FROM file WHERE owner = ? OR public = ?");
+            statement.setString(1, user);
+            statement.setBoolean(2, true);
+            ResultSet rs = statement.executeQuery();
+            
+            int totalRows = 0;
+            rs.last();
+            totalRows = rs.getRow();
+            rs.beforeFirst();
+                 
+            files = new FileInfo[totalRows];
+                
+            int counter = 0;
+            while (rs.next()) {
+                //String filename, int size, String owner, boolean publ, boolean writable, String log
+                files[counter] = new FileInfo(rs.getString("name"), rs.getInt("size"), rs.getString("owner"), rs.getBoolean("public"), rs.getBoolean("writable"), rs.getString("log"));
+                System.out.println("count files " +counter);
+                System.out.println(rs.getString("name"));
+                counter++;                    
+            }
+            
+            } catch (SQLException ex) {
+            Logger.getLogger(DataHandler.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("something went wrong when saving file data");
+            } 
+            System.out.println("filename");
+         System.out.println(files[0].filename);
+        return files;
+    }
+    
+    
     
     public void deleteFileInfo(FileInfo fileInfo){
         
@@ -159,7 +247,7 @@ public class DataHandler {
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
 
-				if(rs.getString("name").equals(user) && rs.getString("pass").equals(pass)){
+				if(rs.getString("name").equals(user) && rs.getString("password").equals(pass)){
                                     correct = true;
                                     System.out.println("correct user and password");
                                 }else{
@@ -176,23 +264,18 @@ public class DataHandler {
     }
     
     public boolean register(String user, String pass){
-        boolean available = false;
-        
+        boolean available = true;
+            
             try {
             statement = connection.prepareStatement("SELECT name FROM user WHERE name = ?");
             statement.setString(1, user);
             
             ResultSet rs = statement.executeQuery();
             while (rs.next()) {
-
+                
 				if(rs.getString("name").equals(user)){
-                                    
-                                    
-                                }else{
-                                    
-                                    available = true;
-                                    addUser(user, pass);
-                                     
+                                    available = false;
+                                    return available;
                                 }
                                     
 			}
@@ -200,6 +283,9 @@ public class DataHandler {
             } catch (SQLException ex) {
             Logger.getLogger(DataHandler.class.getName()).log(Level.SEVERE, null, ex);
             } 
+            if(available){
+                addUser(user, pass);
+            }
          
         return available;
     }

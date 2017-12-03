@@ -17,9 +17,7 @@ public class Main {
         try {
             new Main().startRegistry();
             Naming.rebind(Controller.SERVER_NAME_IN_REGISTRY, new Controller());   
-            System.out.println("Server is running.");
         } catch (MalformedURLException | RemoteException ex) {
-            System.out.println("Could not start chat server.");
         }
     }
 

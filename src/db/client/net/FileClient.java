@@ -19,7 +19,6 @@ public class FileClient {
 			s = new Socket();
 			//sendFile(file);
                         //saveFile(s);
-                        System.out.println("socket established");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		

@@ -11,19 +11,22 @@ public class UserManager {
     
     List<User> loggedIn = new LinkedList<>(); 
     
-        public void logoutUser(String username){
+        public boolean logoutUser(ClientInterface remoteNode, String username){
+            boolean stillLoggedIn = true;
             for(User user : loggedIn){
             
-                if(user.getName().equals(username)){
+                if(user.getName().equals(username) && user.getClient().equals(remoteNode)){
                 //remove any logins from user.
                 loggedIn.remove(user);
+                stillLoggedIn = false;
                 }
             }
+            return stillLoggedIn;
         }
     
         public void loginUser(ClientInterface remoteNode, String username) {
             //remove any previous logins from same user.
-            logoutUser(username);
+            logoutUser(remoteNode, username);
         
             User user = new User(username, remoteNode);
             loggedIn.add(user);
